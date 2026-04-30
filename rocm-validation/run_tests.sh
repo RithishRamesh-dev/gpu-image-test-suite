@@ -71,16 +71,25 @@ record_warn() { TEST_RESULTS["$1"]="WARN"; TEST_DETAILS["$1"]="${2:-}"; ((WARN++
 cmd_exists() { command -v "$1" &>/dev/null; }
 run_cmd()    { "$@" 2>&1 | tee -a "$LOG_FILE" || true; }
 
-# Save output of a command to results dir
+# Save output of a command to results dir AND log the command + output clearly
 capture() {
   local name="$1"; shift
   local outfile="$RESULTS_DIR/${name}.txt"
-  { "$@" 2>&1 || true; } | tee -a "$outfile" >> "$LOG_FILE"
+  local cmd_str="$*"
+  {
+    echo "════════════════════════════════════════"
+    echo "CMD : $cmd_str"
+    echo "TIME: $(date '+%H:%M:%S')"
+    echo "════════════════════════════════════════"
+    { "$@" 2>&1 || true; }
+    echo ""
+  } | tee "$outfile" >> "$LOG_FILE"
 }
 
 # =============================================================================
-# Source individual test modules
+# Source shared helpers first, then individual test modules
 # =============================================================================
+source "$LIB_DIR/_common.sh"
 source "$LIB_DIR/01_os_kernel.sh"
 source "$LIB_DIR/02_rocm_stack.sh"
 source "$LIB_DIR/03_gpu_enumeration.sh"

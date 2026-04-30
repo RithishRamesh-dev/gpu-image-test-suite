@@ -14,14 +14,12 @@ test_observability() {
       record_fail "amd_metrics_exporter_service" "Service is $exporter_status"
     fi
 
-    # Metrics endpoint responds
     if curl -sf http://127.0.0.1:5000/metrics &>/dev/null; then
       record_pass "metrics_endpoint_reachable" "http://127.0.0.1:5000/metrics responds"
 
       local metrics_body
       metrics_body=$(curl -s http://127.0.0.1:5000/metrics 2>/dev/null)
 
-      # GPU metric families present
       for field in gpu temperature power memory utilization; do
         if echo "$metrics_body" | grep -qi "$field"; then
           record_pass "metrics_field_${field}"
@@ -30,22 +28,28 @@ test_observability() {
         fi
       done
 
-      # Capture for diff-ing
       echo "$metrics_body" > "$RESULTS_DIR/metrics_snapshot.txt"
 
-      # Cross-check GPU util vs rocm-smi
+      # GPU count from exporter — unique gpu_id values
       local exporter_gpu_count
-      exporter_gpu_count=$(echo "$metrics_body" | grep -oP 'gpu_id="\K[0-9]+' | sort -un | wc -l || echo "0")
+      exporter_gpu_count=$(echo "$metrics_body" | grep -oP 'gpu_id="\K[0-9]+' | sort -un | wc -l | tr -d '[:space:]')
+      exporter_gpu_count=$(_int "$exporter_gpu_count")
+
       local smi_gpu_count
-      smi_gpu_count=$(rocm-smi --showid 2>/dev/null | grep -c "GPU\[" || echo "0")
+      smi_gpu_count=$(rocm-smi --showid 2>/dev/null | grep -c "GPU\[" | tr -d '[:space:]')
+      smi_gpu_count=$(_int "$smi_gpu_count")
+
       if [[ "$exporter_gpu_count" -eq "$smi_gpu_count" ]]; then
         record_pass "metrics_gpu_count_match" "Exporter reports $exporter_gpu_count GPU(s) = rocm-smi"
       else
         record_warn "metrics_gpu_count_match" "Exporter: $exporter_gpu_count, rocm-smi: $smi_gpu_count"
       fi
-
     else
       record_fail "metrics_endpoint_reachable" "Cannot reach http://127.0.0.1:5000/metrics"
+      for field in gpu temperature power memory utilization; do
+        record_skip "metrics_field_${field}" "endpoint unreachable"
+      done
+      record_skip "metrics_gpu_count_match" "endpoint unreachable"
     fi
   else
     record_skip "amd_metrics_exporter_service" "amd-metrics-exporter not installed"
@@ -69,23 +73,18 @@ test_observability() {
     record_skip "do_agent_service" "do-agent not installed"
   fi
 
-  # ── Prometheus node exporter (common supplementary tool) ─────────────────
+  # ── Prometheus node exporter ─────────────────────────────────────────────
   if curl -sf http://127.0.0.1:9100/metrics &>/dev/null; then
     record_pass "node_exporter" "Prometheus node_exporter running"
   else
     record_skip "node_exporter" "Not running (optional)"
   fi
 
-  # ── dcgm / alternative monitoring ────────────────────────────────────────
-  if cmd_exists dcgmi; then
-    record_pass "dcgm_available" "DCGM found (AMD DCGM)"
-  else
-    record_skip "dcgm_available" "DCGM not installed (optional)"
-  fi
-
-  # ── Syslog GPU-related entries ────────────────────────────────────────────
+  # ── Journal GPU errors — single-file grep so always 1 line output ─────────
   local syslog_gpu_errors
-  syslog_gpu_errors=$(journalctl -p err --since="1 hour ago" 2>/dev/null | grep -ciE "amdgpu|kfd|rocm" || echo "0")
+  syslog_gpu_errors=$(journalctl -p err --since="1 hour ago" 2>/dev/null | \
+                      grep -iE "amdgpu|kfd|rocm" | wc -l | tr -d '[:space:]')
+  syslog_gpu_errors=$(_int "$syslog_gpu_errors")
   if [[ "$syslog_gpu_errors" -eq 0 ]]; then
     record_pass "no_syslog_gpu_errors" "No recent GPU-related errors in journal"
   else

@@ -30,7 +30,7 @@ test_provisioning() {
   # GPU devices present at boot time
   if ls /dev/dri/card* &>/dev/null; then
     local gpu_count
-    gpu_count=$(ls /dev/dri/card* 2>/dev/null | wc -l)
+    gpu_count=$(ls /dev/dri/card* 2>/dev/null | wc -l | tr -d '[:space:]')
     record_pass "gpu_devices_at_boot" "$gpu_count DRI device(s) present"
   else
     record_fail "gpu_devices_at_boot" "No /dev/dri/card* devices found"

@@ -84,10 +84,10 @@ print(round(used*100/total, 1) if total else 0)
 PYEOF
 }
 _mb_throttle_active() {
-  rocm-smi --showrasinfo all 2>/dev/null | grep -ciE "throttle.*:\s*true|thermal.*throttle" || echo "0"
+  rocm-smi --showrasinfo all 2>/dev/null |     grep -iE "throttle.*true|thermal.*throttle" | wc -l | tr -d '[:space:]' || echo "0"
 }
 _mb_ecc_errors() {
-  rocm-smi --showrasinfo all 2>/dev/null | grep -oP "(?i)uncorrected.*:\s*\K[0-9]+" | awk '{s+=$1} END{print s+0}'
+  rocm-smi --showrasinfo all 2>/dev/null |     grep -oP "(?i)uncorrected.*?:\s*\K[0-9]+" |     awk '{s+=$1} END{print s+0}' || echo "0"
 }
 
 # =============================================================================
@@ -1027,7 +1027,7 @@ test_gpu_microbenchmarks() {
 
   # Determine which GPUs to test
   local gpu_count
-  gpu_count=$(rocminfo 2>/dev/null | grep -c "Device Type.*GPU" || echo "1")
+  gpu_count=$(rocminfo 2>/dev/null | grep -c "Device Type.*GPU" | awk '{s+=$1} END{print s+0}' || echo "1")
   # Run on GPU 0 (and GPU N-1 for multi-GPU setups to catch per-slot differences)
   local gpus_to_test=(0)
   if [[ "$gpu_count" -gt 1 ]]; then
