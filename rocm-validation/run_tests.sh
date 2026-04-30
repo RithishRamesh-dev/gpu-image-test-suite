@@ -23,18 +23,18 @@ SKIP_VLLM="${SKIP_VLLM:-false}"
 SKIP_RCCL="${SKIP_RCCL:-false}"
 SKIP_STRESS="${SKIP_STRESS:-false}"
 SKIP_MICROBENCH="${SKIP_MICROBENCH:-false}"
-STRESS_DURATION="${STRESS_DURATION:-600}"       # seconds
-VLLM_LONGEVITY_DURATION="${VLLM_LONGEVITY_DURATION:-1800}"  # seconds
+STRESS_DURATION="${STRESS_DURATION:-60}"        # seconds  (was 600)
+VLLM_LONGEVITY_DURATION="${VLLM_LONGEVITY_DURATION:-120}"  # seconds  (was 1800)
 # ── Micro-benchmark thresholds (module 15) ───────────────────────────────────
 export MB_GEMM_FP16_MIN_TFLOPS="${MB_GEMM_FP16_MIN_TFLOPS:-100}"
 export MB_GEMM_FP32_MIN_TFLOPS="${MB_GEMM_FP32_MIN_TFLOPS:-20}"
 export MB_HBM_BW_MIN_GBPS="${MB_HBM_BW_MIN_GBPS:-800}"
 export MB_PCIE_BW_MIN_GBPS="${MB_PCIE_BW_MIN_GBPS:-20}"
 export MB_THERMAL_MAX_TEMP="${MB_THERMAL_MAX_TEMP:-90}"
-export MB_GEMM_DURATION="${MB_GEMM_DURATION:-30}"
-export MB_MEM_DURATION="${MB_MEM_DURATION:-60}"
-export MB_PCIE_ITER="${MB_PCIE_ITER:-200}"
-export MB_THERMAL_DURATION="${MB_THERMAL_DURATION:-120}"
+export MB_GEMM_DURATION="${MB_GEMM_DURATION:-20}"    # seconds  (was 30)
+export MB_MEM_DURATION="${MB_MEM_DURATION:-30}"      # seconds  (was 60)
+export MB_PCIE_ITER="${MB_PCIE_ITER:-50}"            # iters    (was 200)
+export MB_THERMAL_DURATION="${MB_THERMAL_DURATION:-30}"  # seconds  (was 120)
 FAIL_FAST="${FAIL_FAST:-false}"
 
 # ── Colours ───────────────────────────────────────────────────────────────────

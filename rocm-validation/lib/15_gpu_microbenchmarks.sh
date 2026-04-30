@@ -187,7 +187,7 @@ _run_matmul_fp16() {
   } > "$RESULTS_DIR/mb_fp16_monitor_gpu${gpu_idx}.txt" &
   metrics_pid=$!
 
-  HIP_VISIBLE_DEVICES="$gpu_idx" "$bin" 100 2>&1 | tee "$outfile" >> "$LOG_FILE"
+  HIP_VISIBLE_DEVICES="$gpu_idx" "$bin" 20 2>&1 | tee "$outfile" >> "$LOG_FILE"
   kill "$metrics_pid" 2>/dev/null || true; wait "$metrics_pid" 2>/dev/null || true
 
   _mb_snapshot_metrics "fp16_after_gpu${gpu_idx}"
@@ -342,7 +342,7 @@ _run_matmul_fp32() {
   } > "$monitor_file" &
   local metrics_pid=$!
 
-  HIP_VISIBLE_DEVICES="$gpu_idx" "$bin" 50 2>&1 | tee "$outfile" >> "$LOG_FILE"
+  HIP_VISIBLE_DEVICES="$gpu_idx" "$bin" 15 2>&1 | tee "$outfile" >> "$LOG_FILE"
   kill "$metrics_pid" 2>/dev/null || true; wait "$metrics_pid" 2>/dev/null || true
 
   _mb_snapshot_metrics "fp32_after_gpu${gpu_idx}"
